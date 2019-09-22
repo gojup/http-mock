@@ -1,0 +1,48 @@
+name:                http-mock
+version:             0.1.0.0
+github:              "gojup/http-mock"
+license:             Apache-2.0
+author:              "Fernando Rincon Martin"
+maintainer:          "f.rincon@protonmail.com"
+copyright:           "2019 Fernando Rincon Martin"
+category:            "Testing"
+synopsis:            "HTTP mocking and expectations library for Haskell"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/gojup/http-mock#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+  dependencies:
+  - async
+  - directory
+  - filepath
+  - http-client
+  - network
+  - random
+  - wai
+  - warp
+
+tests:
+  http-mock-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - http-mock
