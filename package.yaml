@@ -31,6 +31,7 @@ library:
   - directory
   - filepath
   - http-client
+  - http-client-tls
   - network
   - random
   - wai

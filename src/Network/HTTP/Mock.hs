@@ -32,11 +32,14 @@
 module Network.HTTP.Mock
   ( 
     -- * Mocking Functions
-    withMockedManager
+    withMockedManager,
+    withMockedTlsManager,
+    withMockedManagerSettings
   ) where
 
 import Network.Wai (Application)
-import Network.HTTP.Client (Manager,defaultManagerSettings, managerRawConnection, socketConnection, newManager)
+import Network.HTTP.Client (Manager, ManagerSettings, defaultManagerSettings, managerRawConnection, socketConnection, newManager, managerTlsConnection)
+import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Socket 
 import System.Directory (removeFile, getTemporaryDirectory)
 import Control.Exception (bracket)
@@ -45,14 +48,26 @@ import System.FilePath ((</>))
 import System.Random (randomIO)
 import Network.Wai.Handler.Warp (runSettingsSocket, defaultSettings)
 
--- | Run a action passing a http client 'Manager' that uses the 'Application' as resolver for all requests
+-- | Run a action passing a http-client 'Manager' that uses the 'Application' as resolver for all requests.
+-- Uses default `ManagerSettings`.
 withMockedManager :: Application -> (Manager -> IO a) -> IO a
-withMockedManager app f = 
-  
+withMockedManager = withMockedManagerSettings defaultManagerSettings
+
+-- | Run a action passing a http-client 'Manager' that uses the 'Application' as resolver for all requests.
+-- Uses `ManagerSettings` with TLS enabled.
+withMockedTlsManager :: Application -> (Manager -> IO a) -> IO a
+withMockedTlsManager = withMockedManagerSettings tlsManagerSettings
+
+-- | Run an action passing a http client 'Manager' that uses the 'Application' as resolver for all requests.
+-- The `Manager` will be created from the given `ManagerSettings`.
+withMockedManagerSettings :: ManagerSettings -> Application -> (Manager -> IO a) -> IO a
+withMockedManagerSettings managerSettings app f =
   bracket startSocket closeSocket $ \serverSocket -> do
   socketAddr <- getSocketName serverSocket
   withAsync (runSettingsSocket defaultSettings serverSocket app) $ \_ -> do
-    manager <- newManager $ defaultManagerSettings { managerRawConnection = (return $ rawConnection socketAddr) }
+    manager <- newManager $ managerSettings { managerRawConnection = (return $ rawConnection socketAddr)
+                                            , managerTlsConnection = (return $ rawConnection socketAddr)
+                                            }
     f manager
   where
 
